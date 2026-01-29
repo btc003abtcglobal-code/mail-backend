@@ -76,7 +76,7 @@ public class SimpleMailController {
                         .body("User does not have a mail password set.");
             }
 
-            return org.springframework.http.ResponseEntity.ok(service.readMails(user.getUsername(), password));
+            return org.springframework.http.ResponseEntity.ok(service.fetchEmails(user.getUsername(), password));
         } catch (Exception e) {
             e.printStackTrace();
             return org.springframework.http.ResponseEntity.status(500).body("Error reading mails: " + e.getMessage());

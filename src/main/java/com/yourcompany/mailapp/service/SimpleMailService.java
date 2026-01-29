@@ -63,7 +63,7 @@ public class SimpleMailService {
         log.info("Mail with attachment sent successfully to {}", to);
     }
 
-    public List<MailResponse> readMails(String username, String password) throws Exception {
+    public List<MailResponse> fetchEmails(String username, String password) throws Exception {
 
         Properties props = new Properties();
         props.put("mail.store.protocol", "imap");
