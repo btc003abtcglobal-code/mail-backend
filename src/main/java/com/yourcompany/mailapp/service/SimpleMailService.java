@@ -38,8 +38,29 @@ public class SimpleMailService {
             log.info("Mail sent successfully to {}", to);
         } catch (Exception e) {
             log.error("Failed to send mail to {}", to, e);
-            throw e;
+            throw e; // Rethrow to let controller handle it
         }
+    }
+
+    public void sendMailWithAttachment(String from, String to, String subject, String body,
+            org.springframework.web.multipart.MultipartFile file) throws Exception {
+        log.info("Sending mail with attachment from: {} to: {}", from, to);
+
+        jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+        org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(
+                message, true);
+
+        helper.setFrom(from + "@localhost");
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(body);
+
+        if (file != null && !file.isEmpty()) {
+            helper.addAttachment(file.getOriginalFilename(), file);
+        }
+
+        mailSender.send(message);
+        log.info("Mail with attachment sent successfully to {}", to);
     }
 
     public List<MailResponse> readMails(String username, String password) throws Exception {

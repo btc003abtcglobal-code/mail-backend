@@ -36,11 +36,27 @@ public class SimpleMailController {
     // }
     // }
 
-    @PostMapping("/send")
+    @PostMapping("/send-mail")
     public String sendMail(@RequestBody MailRequest req, @AuthenticationPrincipal UserDetails userDetails) {
         String from = userDetails != null ? userDetails.getUsername() : "anonymous";
         service.sendMail(from, req.getTo(), req.getSubject(), req.getMessage());
-        return "Mail Sent";
+        return "Mail Sent Successfully";
+    }
+
+    @PostMapping(value = "/send-attachment", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public org.springframework.http.ResponseEntity<String> sendAttachment(
+            @org.springframework.web.bind.annotation.RequestParam("to") String to,
+            @org.springframework.web.bind.annotation.RequestParam("subject") String subject,
+            @org.springframework.web.bind.annotation.RequestParam("message") String message,
+            @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String from = userDetails != null ? userDetails.getUsername() : "anonymous";
+            service.sendMailWithAttachment(from, to, subject, message, file);
+            return org.springframework.http.ResponseEntity.ok("Mail with attachment sent");
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     @GetMapping("/read-mails")

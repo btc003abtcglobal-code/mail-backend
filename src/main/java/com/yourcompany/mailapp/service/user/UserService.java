@@ -137,37 +137,41 @@ public class UserService {
         return response;
     }
 
-    @Transactional
+    // @Transactional // Removed to prevent DB deadlock during long-running system
+    // user creation
     public void registerUser(com.yourcompany.mailapp.dto.MailUserRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
-        if (userRepository.existsByEmail(request.getUsername() + "@yourmail.local")) { // improving email check later
+        if (userRepository.existsByEmail(request.getUsername() + "@yourmail.local")) {
             throw new RuntimeException("Email already exists");
         }
 
-        // 1. Save to DB
+        // 1. Save to DB (Transactional by default in Repository)
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setMailPassword(request.getPassword()); // Store cleartext for mail auth if needed, or just ref
+        user.setMailPassword(request.getPassword());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setAccountType(request.getAccountType());
 
-        // Construct email based on account type or default
-        String domain = "yourmail.local"; // Default for now
+        String domain = "yourmail.local";
         user.setEmail(request.getUsername() + "@" + domain);
-
         user.setRole(User.Role.USER);
         user.setActive(true);
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
-        // 2. Create System User (Linux + Postfix/Dovecot)
-        createSystemUser(request.getUsername(), request.getPassword());
-
-        log.info("User registered successfully: {}", request.getUsername());
+        // 2. Create System User (Linux + Postfix/Dovecot) - OUTSIDE DB TRANSACTION
+        try {
+            createSystemUser(request.getUsername(), request.getPassword());
+            log.info("User registered successfully: {}", request.getUsername());
+        } catch (Exception e) {
+            log.error("System user creation failed. Rolling back DB user: {}", request.getUsername());
+            userRepository.delete(savedUser); // Manual rollback
+            throw new RuntimeException("Failed to register user. System error: " + e.getMessage());
+        }
     }
 
     public void createSystemUser(String username, String password) {

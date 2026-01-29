@@ -81,8 +81,21 @@ public class AuthService {
     }
 
     public Map<String, Object> login(LoginRequest loginRequest) {
+        String usernameOrEmail = loginRequest.getUsername();
+
+        // If username is null/empty, check if email is provided
+        if ((usernameOrEmail == null || usernameOrEmail.isEmpty()) && loginRequest.getEmail() != null) {
+            User user = userRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + loginRequest.getEmail()));
+            usernameOrEmail = user.getUsername();
+        }
+
+        if (usernameOrEmail == null || usernameOrEmail.isEmpty()) {
+            throw new RuntimeException("Username or Email is required");
+        }
+
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                new UsernamePasswordAuthenticationToken(usernameOrEmail, loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
