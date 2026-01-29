@@ -21,10 +21,10 @@ public class MailConfig {
     @Value("${spring.mail.port}")
     private Integer mailPort;
     
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:}")
     private String mailUsername;
     
-    @Value("${spring.mail.password}")
+    @Value("${spring.mail.password:}")
     private String mailPassword;
     
     @Value("${spring.mail.properties.mail.smtp.auth:true}")
@@ -109,10 +109,16 @@ public class MailConfig {
         // Mail properties
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true");
+        
+        if (username != null && !username.isEmpty()) {
+            props.put("mail.smtp.auth", "true");
+        } else {
+            props.put("mail.smtp.auth", "false");
+        }
+        
         props.put("mail.smtp.starttls.enable", useTls.toString());
         props.put("mail.smtp.starttls.required", useTls.toString());
-        props.put("mail.debug", "false");
+        props.put("mail.debug", "true");
         
         // Timeout settings
         props.put("mail.smtp.connectiontimeout", "5000");

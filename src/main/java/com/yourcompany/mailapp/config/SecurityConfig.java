@@ -12,12 +12,25 @@ import org.springframework.context.annotation.Bean;
 @Configuration
 public class SecurityConfig {
 
+    private final com.yourcompany.mailapp.security.JwtFilter jwtFilter;
+
+    public SecurityConfig(com.yourcompany.mailapp.security.JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll());
+                        .requestMatchers("/api/auth/**", "/h2-console/**", "/error", "/send", "/read", "/mail/**")
+                        .permitAll()
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session.sessionCreationPolicy(
+                        org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // For H2 console
+                .addFilterBefore(jwtFilter,
+                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

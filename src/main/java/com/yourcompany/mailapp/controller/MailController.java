@@ -42,7 +42,11 @@ public class MailController {
     private final MailSyncService mailSyncService;
     private final AttachmentService attachmentService;
 
-    
+    @GetMapping("/read")
+    public String read() throws Exception {
+        mailReceiveService.readInbox();
+        return "Mail Read (check logs)";
+    }
 
     // ==================== Send Mail Operations ====================
 

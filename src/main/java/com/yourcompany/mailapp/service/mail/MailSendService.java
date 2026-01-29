@@ -28,7 +28,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class MailSendService {
-    
 
     private final MailAccountRepository mailAccountRepository;
     private final MailRepository mailRepository;
@@ -43,12 +42,21 @@ public class MailSendService {
             MailAccount mailAccount = mailAccountRepository.findById(request.getMailAccountId())
                     .orElseThrow(() -> new RuntimeException("Mail account not found"));
 
+            // Determine if we should use auth. For port 25 (local), we usually don't use
+            // auth.
+            String smtpUsername = mailAccount.getEmailAddress();
+            String smtpPassword = mailAccount.getPassword();
+            if (mailAccount.getSmtpPort() == 25) {
+                smtpUsername = null;
+                smtpPassword = null;
+            }
+
             // Create custom mail sender for this account
             JavaMailSender mailSender = mailConfig.createMailSender(
                     mailAccount.getSmtpHost(),
                     mailAccount.getSmtpPort(),
-                    mailAccount.getEmailAddress(),
-                    mailAccount.getPassword(),
+                    smtpUsername,
+                    smtpPassword,
                     mailAccount.getSmtpUseTls());
 
             // Create message
@@ -68,10 +76,12 @@ public class MailSendService {
 
             helper.setSubject(request.getSubject());
 
+            String bodyText = request.getBodyText() != null ? request.getBodyText() : "";
+
             if (request.getBodyHtml() != null && !request.getBodyHtml().isEmpty()) {
-                helper.setText(request.getBodyText() != null ? request.getBodyText() : "", request.getBodyHtml());
+                helper.setText(bodyText, request.getBodyHtml());
             } else {
-                helper.setText(request.getBodyText() != null ? request.getBodyText() : "");
+                helper.setText(bodyText);
             }
 
             // Add attachments
@@ -155,5 +165,3 @@ public class MailSendService {
         return sendMail(request);
     }
 }
-
-

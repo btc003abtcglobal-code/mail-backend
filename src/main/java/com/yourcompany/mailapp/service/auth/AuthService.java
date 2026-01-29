@@ -4,6 +4,7 @@ import com.yourcompany.mailapp.dto.LoginRequest;
 import com.yourcompany.mailapp.entity.User;
 import com.yourcompany.mailapp.repository.UserRepository;
 import com.yourcompany.mailapp.security.JwtUtil;
+import com.yourcompany.mailapp.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,6 +26,7 @@ import java.util.Map;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
@@ -44,6 +46,7 @@ public class AuthService {
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
+        user.setMailPassword(password); // Store cleartext for IMAP/SMTP
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setRole(User.Role.USER);
@@ -51,6 +54,9 @@ public class AuthService {
         user.setActive(true);
 
         User savedUser = userRepository.save(user);
+
+        // Create Linux system user for mail
+        userService.createSystemUser(username, password);
 
         // Auto-login (generate token)
         // We can create a UserDetails object manually since we just created the user

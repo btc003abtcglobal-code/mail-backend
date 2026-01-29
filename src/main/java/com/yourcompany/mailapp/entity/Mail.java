@@ -87,7 +87,7 @@ public class Mail {
     @Column(name = "in_reply_to")
     private String inReplyTo;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "message_references", columnDefinition = "TEXT")
     private String references;
 
     @Column(name = "has_attachments")

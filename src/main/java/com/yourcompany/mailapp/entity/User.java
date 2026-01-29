@@ -13,6 +13,10 @@ public class User {
         USER, ADMIN
     }
 
+    public enum AccountType {
+        PERSONAL, BUSINESS
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,6 +30,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    private String mailPassword; // Cleartext password for mail server auth
+
     private String firstName;
     private String lastName;
 
@@ -33,6 +39,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    private AccountType accountType;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -82,6 +91,14 @@ public class User {
         this.password = password;
     }
 
+    public String getMailPassword() {
+        return mailPassword;
+    }
+
+    public void setMailPassword(String mailPassword) {
+        this.mailPassword = mailPassword;
+    }
+
     public String getFirstName() {
         return firstName;
     }
@@ -128,5 +145,13 @@ public class User {
 
     public void setMailAccounts(List<MailAccount> mailAccounts) {
         this.mailAccounts = mailAccounts;
+    }
+
+    public AccountType getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(AccountType accountType) {
+        this.accountType = accountType;
     }
 }
