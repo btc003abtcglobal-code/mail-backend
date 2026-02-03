@@ -23,6 +23,8 @@ public class MailAccount {
 
     private String emailAddress;
     private String displayName;
+    private String vpsUsername;
+    private String vpsPassword;
     private String smtpHost;
     private Integer smtpPort;
     private String imapHost;

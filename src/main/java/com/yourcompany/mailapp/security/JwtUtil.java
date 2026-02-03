@@ -103,6 +103,11 @@ public class JwtUtil {
         return createToken(claims, userDetails.getUsername());
     }
 
+    public String generateToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(claims, username);
+    }
+
     /**
      * Generate JWT token with custom claims
      * 

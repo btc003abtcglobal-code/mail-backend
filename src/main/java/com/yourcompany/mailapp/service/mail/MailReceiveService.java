@@ -94,30 +94,7 @@ public class MailReceiveService {
         return newMails;
     }
 
-    public void readInbox() throws Exception {
-        Properties props = new Properties();
-        props.put("mail.store.protocol", "imap");
-        props.put("mail.imap.host", "localhost");
-        props.put("mail.imap.port", "143");
-
-        Session session = Session.getInstance(props);
-        Store store = session.getStore("imap");
-
-        store.connect("localhost", "testuser2", "TESTUSER2_PASSWORD");
-
-        jakarta.mail.Folder inbox = store.getFolder("INBOX");
-        inbox.open(jakarta.mail.Folder.READ_ONLY);
-
-        Message[] messages = inbox.getMessages();
-
-        for (Message msg : messages) {
-            System.out.println("From: " + msg.getFrom()[0]);
-            System.out.println("Subject: " + msg.getSubject());
-        }
-
-        inbox.close(false);
-        store.close();
-    }
+    // readInbox method removed (legacy/hardcoded)
 
     private Session createImapSession(MailAccount mailAccount) {
         Properties props = new Properties();
