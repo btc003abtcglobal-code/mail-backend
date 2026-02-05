@@ -1,33 +1,34 @@
-# Run Instructions
+# How to Run on Hostinger VPS
 
 ## Prerequisites
-The application requires **Java 17** (JDK) to run, which is currently missing from your system.
+- **Java 17** installed on the VPS.
+- **MySQL/MariaDB** running (which you have configured).
+- **Postfix** and **Dovecot** installed and running (for mail services).
 
-### 1. Install Java 17
-Open your terminal and run:
-```bash
-sudo apt update
-sudo apt install openjdk-17-jdk
-```
+## Steps
 
-### 2. Verify Installation
-Check that Java is installed correctly:
-```bash
-java -version
-```
-It should show `openjdk version "17..."`.
+1.  **Build the Application (Locally)**
+    Run the following command in your project directory to create the JAR file:
+    ```bash
+    mvn clean package -DskipTests
+    ```
 
-## Running the Application
-Once Java is installed, you can start the application:
+2.  **Upload the JAR**
+    Upload the generated JAR file from `target/MailApplication-Backend-0.0.1-SNAPSHOT.jar` to your VPS (e.g., to `/home/vps-user/mailapp/`).
 
-```bash
-cd /media/pradeep/Windows/mail/MailApplication-Backend
-./mvnw spring-boot:run
-```
+3.  **Run the Application**
+    SSH into your VPS and run the application:
+    ```bash
+    java -jar MailApplication-Backend-0.0.1-SNAPSHOT.jar
+    ```
 
-## Mail Server Verification
-Your local mail servers are already running and configured correctly:
-- **Postfix (SMTP)**: Port 25
-- **Dovecot (IMAP)**: Port 143
+4.  **Run in Background (Production)**
+    To keep it running after you disconnect, use `nohup`:
+    ```bash
+    nohup java -jar MailApplication-Backend-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
+    ```
+    - View logs: `tail -f app.log`
 
-The application is configured to connect to these local servers automatically.
+## Troubleshooting
+- **Database Connection**: If the app fails to start, check `app.log`. If it's a connection error, ensure the VPS firewall allows connections to the database on port 3306 (though usually `localhost` is better if DB is on the same server).
+- **Port 8080**: Ensure port 8080 is open in the Hostinger firewall to access the API.
