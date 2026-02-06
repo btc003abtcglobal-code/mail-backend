@@ -30,6 +30,13 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
+
+        // Option 1: Skip filter for temp endpoints
+        if (request.getRequestURI().startsWith("/api/emails/create")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String username = null;
         String jwt = null;
 
@@ -46,7 +53,7 @@ public class JwtFilter extends OncePerRequestFilter {
             // FIX: Handle temp_ tokens by stripping the prefix
             String actualUsername = username;
             boolean isTempToken = false;
-            
+
             if (username.startsWith("temp_")) {
                 actualUsername = username.substring(5); // Remove "temp_" prefix
                 isTempToken = true;
@@ -55,11 +62,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
             try {
                 var user = userService.getUserByEmailOrUsername(actualUsername);
-                
+
                 // For temp tokens, validate against the prefixed username
                 // For regular tokens, validate against the actual username
                 String tokenUsername = isTempToken ? username : user.getUsername();
-                
+
                 if (jwtUtil.validateToken(jwt, tokenUsername)) {
                     // Create simple authentication token
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
