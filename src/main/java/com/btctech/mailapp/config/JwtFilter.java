@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -31,7 +30,6 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-
         String username = null;
         String jwt = null;
 
@@ -45,23 +43,30 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Validate user existence.
-            // Note: UserService doesn't return UserDetails, so we map distinct fields.
-            // Ideally UserService should implement UserDetailsService, but for now we
-            // manually adapt.
-            try {
-                var user = userService.getUserByEmailOrUsername(username);
+            // FIX: Handle temp_ tokens by stripping the prefix
+            String actualUsername = username;
+            boolean isTempToken = false;
+            
+            if (username.startsWith("temp_")) {
+                actualUsername = username.substring(5); // Remove "temp_" prefix
+                isTempToken = true;
+                log.debug("Processing temp token for user: {}", actualUsername);
+            }
 
-                if (jwtUtil.validateToken(jwt, user.getUsername())) {
+            try {
+                var user = userService.getUserByEmailOrUsername(actualUsername);
+                
+                // For temp tokens, validate against the prefixed username
+                // For regular tokens, validate against the actual username
+                String tokenUsername = isTempToken ? username : user.getUsername();
+                
+                if (jwtUtil.validateToken(jwt, tokenUsername)) {
                     // Create simple authentication token
-                    // We don't have roles/authorities in this simple User entity yet, sending empty
-                    // list
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             user.getUsername(), null, new ArrayList<>());
-
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    log.debug("Authenticated user: {}", username);
+                    log.debug("Authenticated user: {} (temp: {})", actualUsername, isTempToken);
                 }
             } catch (Exception e) {
                 log.error("User validation failed during JWT filter: {}", e.getMessage());
