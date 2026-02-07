@@ -30,6 +30,9 @@ public class MailAccount {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "quota")
+    private Long quota;
+
     @Column(name = "is_primary")
     private Boolean isPrimary = false;
 
